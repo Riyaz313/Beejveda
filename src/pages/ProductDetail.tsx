@@ -4,6 +4,8 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { getProductBySlug, getProductsByCategory } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { 
   Star, 
   Heart, 
@@ -23,6 +25,10 @@ export default function ProductDetail() {
   const product = getProductBySlug(slug || "");
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<"benefits" | "ingredients" | "howToUse">("benefits");
+  
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+  const inWishlist = product ? isInWishlist(product.id) : false;
 
   if (!product) {
     return (
@@ -164,20 +170,37 @@ export default function ProductDetail() {
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
-                <Button size="lg" className="flex-1" disabled={!product.inStock}>
+                <Button 
+                  size="lg" 
+                  className="flex-1" 
+                  disabled={!product.inStock}
+                  onClick={() => addToCart(product, quantity)}
+                >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   {product.inStock ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button size="lg" variant="outline">
-                  <Heart className="w-5 h-5" />
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className={cn(inWishlist && "bg-destructive/10 border-destructive text-destructive")}
+                  onClick={() => addToWishlist(product)}
+                >
+                  <Heart className={cn("w-5 h-5", inWishlist && "fill-current")} />
                 </Button>
               </div>
 
               {/* Buy Now */}
               {product.inStock && (
-                <Button size="lg" variant="gold" className="w-full mb-8">
-                  Buy Now
-                </Button>
+                <Link to="/cart">
+                  <Button 
+                    size="lg" 
+                    variant="gold" 
+                    className="w-full mb-8"
+                    onClick={() => addToCart(product, quantity)}
+                  >
+                    Buy Now
+                  </Button>
+                </Link>
               )}
 
               {/* Trust Badges */}
