@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useSearch } from "@/contexts/SearchContext";
+import { ProductCard } from "@/components/ProductCard";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -31,7 +35,13 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  const { itemCount } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
+  const { query, results, search, clearSearch } = useSearch();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -41,7 +51,23 @@ export function Header() {
 
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+    clearSearch();
   }, [location]);
+
+  const handleSearch = (value: string) => {
+    setSearchInput(value);
+    search(value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchInput.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchInput.trim())}`);
+      setIsSearchOpen(false);
+      clearSearch();
+    }
+  };
 
   return (
     <>
@@ -119,20 +145,60 @@ export function Header() {
             {/* Right Actions */}
             <div className="flex items-center gap-2">
               {/* Search */}
-              <div className={cn(
-                "hidden md:flex items-center transition-all duration-300",
-                isSearchOpen ? "w-64" : "w-10"
-              )}>
+              <div className="hidden md:block relative">
                 {isSearchOpen ? (
-                  <div className="relative w-full animate-fade-in">
-                    <Input
-                      type="search"
-                      placeholder="Search products..."
-                      className="pr-10 h-10"
-                      autoFocus
-                      onBlur={() => setIsSearchOpen(false)}
-                    />
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <div className="animate-fade-in">
+                    <form onSubmit={handleSearchSubmit}>
+                      <Input
+                        type="search"
+                        placeholder="Search products..."
+                        className="w-64 pr-10 h-10"
+                        value={searchInput}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        autoFocus
+                      />
+                      <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    </form>
+                    
+                    {/* Search Results Dropdown */}
+                    {results.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-lg shadow-lg border border-border max-h-[400px] overflow-y-auto z-50">
+                        {results.slice(0, 5).map((product) => (
+                          <Link
+                            key={product.id}
+                            to={`/product/${product.slug}`}
+                            className="flex items-center gap-3 p-3 hover:bg-secondary transition-colors"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              clearSearch();
+                            }}
+                          >
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-lg"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">{product.category}</p>
+                            </div>
+                            <span className="font-semibold text-sm">₹{product.price}</span>
+                          </Link>
+                        ))}
+                        {results.length > 5 && (
+                          <Link
+                            to={`/shop?search=${encodeURIComponent(searchInput)}`}
+                            className="block p-3 text-center text-sm text-primary hover:bg-secondary font-medium"
+                            onClick={() => {
+                              setIsSearchOpen(false);
+                              clearSearch();
+                            }}
+                          >
+                            View all {results.length} results
+                          </Link>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Button
@@ -145,9 +211,16 @@ export function Header() {
                 )}
               </div>
 
-              <Button variant="ghost" size="icon" className="hidden sm:flex">
-                <Heart className="w-5 h-5" />
-              </Button>
+              <Link to="/wishlist" className="relative hidden sm:flex">
+                <Button variant="ghost" size="icon">
+                  <Heart className="w-5 h-5" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Button>
+              </Link>
 
               <Link to="/account">
                 <Button variant="ghost" size="icon">
@@ -159,7 +232,7 @@ export function Header() {
                 <Button variant="ghost" size="icon">
                   <ShoppingCart className="w-5 h-5" />
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
-                    0
+                    {itemCount}
                   </span>
                 </Button>
               </Link>
@@ -182,14 +255,16 @@ export function Header() {
           <div className="lg:hidden bg-card border-t border-border animate-slide-in-right">
             <div className="container py-4">
               {/* Mobile Search */}
-              <div className="relative mb-4">
+              <form onSubmit={handleSearchSubmit} className="relative mb-4">
                 <Input
                   type="search"
                   placeholder="Search products..."
                   className="pr-10"
+                  value={searchInput}
+                  onChange={(e) => handleSearch(e.target.value)}
                 />
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              </div>
+              </form>
 
               <nav className="space-y-1">
                 {navigation.map((item) => (
@@ -226,6 +301,17 @@ export function Header() {
           </div>
         )}
       </header>
+
+      {/* Search Overlay for closing */}
+      {isSearchOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => {
+            setIsSearchOpen(false);
+            clearSearch();
+          }}
+        />
+      )}
     </>
   );
 }

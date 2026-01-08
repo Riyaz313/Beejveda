@@ -3,6 +3,8 @@ import { Heart, ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/data/products";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 interface ProductCardProps {
   product: Product;
@@ -10,9 +12,28 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, className }: ProductCardProps) {
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+  
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
+
+  const inWishlist = isInWishlist(product.id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.inStock) {
+      addToCart(product);
+    }
+  };
+
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToWishlist(product);
+  };
 
   return (
     <div className={cn("group bg-card rounded-2xl overflow-hidden shadow-sm card-hover", className)}>
@@ -52,9 +73,13 @@ export function ProductCard({ product, className }: ProductCardProps) {
           <Button
             size="icon"
             variant="secondary"
-            className="w-9 h-9 rounded-full shadow-md"
+            className={cn(
+              "w-9 h-9 rounded-full shadow-md",
+              inWishlist && "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            )}
+            onClick={handleWishlist}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={cn("w-4 h-4", inWishlist && "fill-current")} />
           </Button>
         </div>
 
@@ -65,6 +90,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
             size="sm"
             className="w-full"
             disabled={!product.inStock}
+            onClick={handleAddToCart}
           >
             <ShoppingCart className="w-4 h-4 mr-2" />
             {product.inStock ? "Add to Cart" : "Out of Stock"}
