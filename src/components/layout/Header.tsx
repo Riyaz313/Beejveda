@@ -10,7 +10,7 @@ import { useSearch } from "@/contexts/SearchContext";
 import { ProductCard } from "@/components/ProductCard";
 
 const navigation = [
-  { name: "Home", href: "/" },
+  // { name: "Home", href: "/" },
   { name: "Shop", href: "/shop" },
   {
     name: "Categories",
@@ -23,7 +23,7 @@ const navigation = [
       { name: "Microgreens", href: "/category/microgreens" },
     ],
   },
-  { name: "Mushrooms & Microgreens", href: "/mushrooms-microgreens" },
+  // { name: "Mushrooms & Microgreens", href: "/mushrooms-microgreens" },
   { name: "About Us", href: "/about" },
   { name: "Why BeejVeda", href: "/why-beejveda" },
   { name: "Blog", href: "/blog" },
