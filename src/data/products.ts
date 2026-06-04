@@ -1,5 +1,5 @@
 import DriedVegetablePowder from "@/assets/products/Driedvegetablepowder.png";
-import FreshMilkyMushrooms from "@/assets/products/FreshmilkyMushrooms.png";
+import FreshMilkyMushrooms from "@/assets/products/FreshMilkyMushrooms.png";
 import TomatoPowder from "@/assets/products/TomatoPowder.png";
 import BeetrootSpinachPowderCombo from "@/assets/products/Beetroot&SpanishPowder.png";
 import OysterMushrooms from "@/assets/products/OysterMushrooms.png";
