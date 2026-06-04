@@ -76,17 +76,17 @@ export default function Contact() {
                   {
                     icon: MapPin,
                     title: "Our Location",
-                    content: "123 Organic Lane, Green Valley, India - 400001"
+                    content: "3-47, Hameedulla Nagar Shamshabad,Hyderabad,501218"
                   },
                   {
                     icon: Phone,
                     title: "Phone",
-                    content: "+91 98765 43210"
+                    content: "+91 8688414486"
                   },
                   {
                     icon: Mail,
                     title: "Email",
-                    content: "hello@beejveda.com"
+                    content: "beejvedanatural@gmail.com"
                   },
                   {
                     icon: Clock,

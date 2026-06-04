@@ -3,18 +3,18 @@ import { Layout } from "@/components/layout/Layout";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 const blogPosts = [
+  // {
+  //   id: "1",
+  //   title: "7-Day Microgreens = 30 Days of Vegetables: The Science",
+  //   excerpt: "Discover why microgreens are considered one of the most nutrient-dense foods on the planet and how they can transform your health.",
+  //   image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=400&fit=crop",
+  //   category: "Nutrition",
+  //   date: "Dec 28, 2024",
+  //   readTime: "5 min read",
+  //   slug: "microgreens-nutrition-science",
+  // },
   {
     id: "1",
-    title: "7-Day Microgreens = 30 Days of Vegetables: The Science",
-    excerpt: "Discover why microgreens are considered one of the most nutrient-dense foods on the planet and how they can transform your health.",
-    image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=400&fit=crop",
-    category: "Nutrition",
-    date: "Dec 28, 2024",
-    readTime: "5 min read",
-    slug: "microgreens-nutrition-science",
-  },
-  {
-    id: "2",
     title: "Medicinal Mushrooms: Ancient Wisdom Meets Modern Science",
     excerpt: "From immunity to brain health, explore how medicinal mushrooms are revolutionizing wellness practices worldwide.",
     image: "https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=600&h=400&fit=crop",
@@ -24,7 +24,7 @@ const blogPosts = [
     slug: "medicinal-mushrooms-guide",
   },
   {
-    id: "3",
+    id: "2",
     title: "The Ayurvedic Morning Ritual: Start Your Day Right",
     excerpt: "Learn how to incorporate traditional Ayurvedic practices with modern superfoods for optimal health and energy.",
     image: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=600&h=400&fit=crop",
@@ -33,18 +33,18 @@ const blogPosts = [
     readTime: "6 min read",
     slug: "ayurvedic-morning-ritual",
   },
+  // {
+  //   id: "4",
+  //   title: "Growing Your Own Microgreens at Home",
+  //   excerpt: "A beginner's guide to growing nutrient-packed microgreens in your kitchen with minimal equipment.",
+  //   image: "https://images.unsplash.com/photo-1595868203439-a84d51c6740d?w=600&h=400&fit=crop",
+  //   category: "DIY",
+  //   date: "Dec 15, 2024",
+  //   readTime: "8 min read",
+  //   slug: "growing-microgreens-home",
+  // },
   {
-    id: "4",
-    title: "Growing Your Own Microgreens at Home",
-    excerpt: "A beginner's guide to growing nutrient-packed microgreens in your kitchen with minimal equipment.",
-    image: "https://images.unsplash.com/photo-1595868203439-a84d51c6740d?w=600&h=400&fit=crop",
-    category: "DIY",
-    date: "Dec 15, 2024",
-    readTime: "8 min read",
-    slug: "growing-microgreens-home",
-  },
-  {
-    id: "5",
+    id: "3",
     title: "The Benefits of Herbal Teas: A Complete Guide",
     excerpt: "Explore the healing properties of different herbal teas and how to incorporate them into your daily routine.",
     image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=600&h=400&fit=crop",
@@ -53,16 +53,16 @@ const blogPosts = [
     readTime: "6 min read",
     slug: "herbal-teas-guide",
   },
-  {
-    id: "6",
-    title: "Superfoods for Immunity: What Science Says",
-    excerpt: "Evidence-based insights into which superfoods actually boost your immune system and how to use them.",
-    image: "https://images.unsplash.com/photo-1610415946601-7e66f74a47d1?w=600&h=400&fit=crop",
-    category: "Nutrition",
-    date: "Dec 5, 2024",
-    readTime: "7 min read",
-    slug: "superfoods-immunity",
-  },
+  // {
+  //   id: "6",
+  //   title: "Superfoods for Immunity: What Science Says",
+  //   excerpt: "Evidence-based insights into which superfoods actually boost your immune system and how to use them.",
+  //   image: "https://images.unsplash.com/photo-1610415946601-7e66f74a47d1?w=600&h=400&fit=crop",
+  //   category: "Nutrition",
+  //   date: "Dec 5, 2024",
+  //   readTime: "7 min read",
+  //   slug: "superfoods-immunity",
+  // },
 ];
 
 export default function Blog() {

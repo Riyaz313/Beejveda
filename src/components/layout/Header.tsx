@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useSearch } from "@/contexts/SearchContext";
 import { ProductCard } from "@/components/ProductCard";
+import Logo from "@/assets/logo.png";
 
 const navigation = [
   // { name: "Home", href: "/" },
@@ -17,10 +18,10 @@ const navigation = [
     href: "/categories",
     children: [
       { name: "Herbal Teas", href: "/category/herbal-teas" },
-      { name: "Dried Fruits", href: "/category/dried-fruits" },
+      // { name: "Dried Fruits", href: "/category/dried-fruits" },
       { name: "Dried Vegetables & Powders", href: "/category/dried-vegetables-powders" },
       { name: "Mushrooms", href: "/category/mushrooms" },
-      { name: "Microgreens", href: "/category/microgreens" },
+      // { name: "Microgreens", href: "/category/microgreens" },
     ],
   },
   // { name: "Mushrooms & Microgreens", href: "/mushrooms-microgreens" },
@@ -38,7 +39,7 @@ export function Header() {
   const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { query, results, search, clearSearch } = useSearch();
@@ -89,9 +90,17 @@ export function Header() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center">
-                <span className="text-primary-foreground font-display font-bold text-lg">B</span>
-              </div>
+
+              {/* <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center"> */}
+              {/* <span className="text-primary-foreground font-display font-bold text-lg">B</span> */}
+              {/* </div> */}
+
+              <img
+                src={Logo}
+                alt="BeejVeda Naturals"
+                className="h-20 w-auto object-contain"
+              />
+
               <div className="hidden sm:block">
                 <h1 className="font-display font-bold text-xl text-primary leading-tight">
                   BeejVeda<span className="text-leaf">Naturals</span>
@@ -159,7 +168,7 @@ export function Header() {
                       />
                       <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     </form>
-                    
+
                     {/* Search Results Dropdown */}
                     {results.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-lg shadow-lg border border-border max-h-[400px] overflow-y-auto z-50">
@@ -304,8 +313,8 @@ export function Header() {
 
       {/* Search Overlay for closing */}
       {isSearchOpen && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => {
             setIsSearchOpen(false);
             clearSearch();

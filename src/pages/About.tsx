@@ -1,5 +1,6 @@
 import { Layout } from "@/components/layout/Layout";
 import { Leaf, Users, Award, Heart, Target, Globe } from "lucide-react";
+import BeejvedaImage from "@/assets/BeejvedaImage.png";
 
 export default function About() {
   return (
@@ -50,7 +51,8 @@ export default function About() {
             </div>
             <div className="relative">
               <img
-                src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=500&fit=crop"
+                // src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=600&h=500&fit=crop"
+                src={BeejvedaImage}
                 alt="Organic farming"
                 className="rounded-2xl shadow-xl"
               />

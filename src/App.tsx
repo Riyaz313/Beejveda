@@ -12,7 +12,12 @@ import ProductDetail from "./pages/ProductDetail";
 import Category from "./pages/Category";
 import About from "./pages/About";
 import WhyBeejVeda from "./pages/WhyBeejVeda";
+import ShippingInfo from "./pages/ShippingInfo";
+import Returns from "./pages/Returns";
 import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import RefundPolicy from "./pages/RefundPolicy";
 import Blog from "./pages/Blog";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -40,7 +45,12 @@ const App = () => (
                 <Route path="/mushrooms-microgreens" element={<Shop />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/why-beejveda" element={<WhyBeejVeda />} />
+                <Route path="/shipping" element={<ShippingInfo />} />
+                <Route path="/returns" element={<Returns />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/refund" element={<RefundPolicy />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<Blog />} />
                 <Route path="/cart" element={<Cart />} />

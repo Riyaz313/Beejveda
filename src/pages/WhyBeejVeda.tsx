@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import Logo from "@/assets/Logo.png";
 import { 
   Sprout, 
   FlaskConical, 
@@ -29,7 +30,7 @@ export default function WhyBeejVeda() {
       </section>
 
       {/* Microgreens Section */}
-      <section className="py-20">
+      {/* <section className="py-20">
         <div className="container">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1">
@@ -71,14 +72,15 @@ export default function WhyBeejVeda() {
             </div>
             <div className="order-1 lg:order-2">
               <img
-                src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=500&fit=crop"
+                // src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=600&h=500&fit=crop"
+                src={Logo}
                 alt="Fresh microgreens"
-                className="rounded-2xl shadow-xl"
+                // className="rounded-2xl shadow-xl"
               />
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Mushrooms Section */}
       <section className="py-20 bg-secondary/30">

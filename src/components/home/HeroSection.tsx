@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Leaf, Sparkles } from "lucide-react";
+import HeroImage from "@/assets/HeroImage.png";
 
 export function HeroSection() {
   return (
@@ -88,7 +89,8 @@ export function HeroSection() {
               {/* Main Image */}
               <div className="absolute inset-8 rounded-full overflow-hidden shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&h=600&fit=crop"
+                  // src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&h=600&fit=crop"
+                  src={HeroImage}
                   alt="Fresh organic microgreens and vegetables"
                   className="w-full h-full object-cover"
                 />

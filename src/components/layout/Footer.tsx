@@ -6,24 +6,24 @@ import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, Leaf } from
 const footerLinks = {
   shop: [
     { name: "All Products", href: "/shop" },
-    { name: "Herbal Teas", href: "/category/herbal-teas" },
-    { name: "Microgreens", href: "/category/microgreens" },
-    { name: "Mushrooms", href: "/category/mushrooms" },
-    { name: "Wellness Packs", href: "/bundles" },
+    // { name: "Herbal Teas", href: "/category/herbal-teas" },
+    // { name: "Microgreens", href: "/category/microgreens" },
+    // { name: "Mushrooms", href: "/category/mushrooms" },
+    // { name: "Wellness Packs", href: "/bundles" },
   ],
   company: [
     { name: "About Us", href: "/about" },
     { name: "Why BeejVeda", href: "/why-beejveda" },
     { name: "Our Story", href: "/about#story" },
     { name: "Blog", href: "/blog" },
-    { name: "Careers", href: "/careers" },
+    // { name: "Careers", href: "/careers" },
   ],
   support: [
     { name: "Contact Us", href: "/contact" },
-    { name: "FAQs", href: "/faqs" },
+    // { name: "FAQs", href: "/faqs" },
     { name: "Shipping Info", href: "/shipping" },
     { name: "Returns", href: "/returns" },
-    { name: "Track Order", href: "/track-order" },
+    // { name: "Track Order", href: "/track-order" },
   ],
   legal: [
     { name: "Privacy Policy", href: "/privacy" },
@@ -85,14 +85,14 @@ export function Footer() {
               </div>
             </Link>
             <p className="text-primary-foreground/70 text-sm mb-6 max-w-xs">
-              Bringing you the purest organic products straight from nature. 
+              Bringing you the purest organic products straight from nature.
               Microgreens, mushrooms, herbal teas & superfoods for modern wellness.
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
+              <a href="https://www.instagram.com/beejveda_products/" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
                 <Instagram className="w-5 h-5" />
               </a>
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">
@@ -162,19 +162,19 @@ export function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 shrink-0 mt-0.5" />
                 <span className="text-sm text-primary-foreground/70">
-                  123 Organic Lane, Green Valley, India - 400001
+                  3-47, Hameedulla Nagar Shamshabad,Hyderabad,501218
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 shrink-0" />
-                <a href="tel:+919876543210" className="text-sm text-primary-foreground/70 hover:text-primary-foreground">
-                  +91 98765 43210
+                <a href="tel:+918688414486" className="text-sm text-primary-foreground/70 hover:text-primary-foreground">
+                  +91 8688414486
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 shrink-0" />
                 <a href="mailto:hello@beejveda.com" className="text-sm text-primary-foreground/70 hover:text-primary-foreground">
-                  hello@beejveda.com
+                  beejvedanatural@gmail.com
                 </a>
               </li>
             </ul>
