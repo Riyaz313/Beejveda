@@ -8,7 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useSearch } from "@/contexts/SearchContext";
 import { ProductCard } from "@/components/ProductCard";
-import Logo from "@/assets/logo.png";
+import Logo from "@/assets/Logo.png";
 
 const navigation = [
   // { name: "Home", href: "/" },
