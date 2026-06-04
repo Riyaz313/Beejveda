@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
-import FreshMilkyMushrooms from "@/assets/products/FreshmilkyMushrooms.png";
+import FreshMilkyMushrooms from "@/assets/products/FreshMilkyMushrooms.png";
 
 
 const blogPosts = [
