@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, Menu, X, ChevronDown, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useSearch } from "@/contexts/SearchContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ProductCard } from "@/components/ProductCard";
 import Logo from "@/assets/Logo.png";
 
@@ -43,6 +44,7 @@ export function Header() {
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { query, results, search, clearSearch } = useSearch();
+  const { isAuthenticated, isAdmin } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -231,6 +233,14 @@ export function Header() {
                 </Button>
               </Link>
 
+              {isAdmin && (
+                <Link to="/admin" className="hidden sm:flex">
+                  <Button variant="ghost" size="icon">
+                    <Shield className="w-5 h-5" />
+                  </Button>
+                </Link>
+              )}
+
               <Link to="/account">
                 <Button variant="ghost" size="icon">
                   <User className="w-5 h-5" />
@@ -305,6 +315,15 @@ export function Header() {
                     )}
                   </div>
                 ))}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-secondary/50"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin Panel
+                  </Link>
+                )}
               </nav>
             </div>
           </div>

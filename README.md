@@ -1,73 +1,253 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Project info
+<img src="src/assets/Logo.png" alt="BeejVeda Logo" width="200" />
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+# 🌿 BeejVeda Naturals
 
-## How can I edit this code?
+**Organic Wellness Products — Farm to Your Doorstep**
 
-There are several ways of editing your application.
+Premium herbal teas, mushroom supplements, dried vegetables, and microgreens sourced directly from organic farms.
 
-**Use Lovable**
+</div>
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## About
 
-**Use your preferred IDE**
+BeejVeda Naturals is an e-commerce platform for organic health and wellness products. Built as a **MERN stack** application with a Vite-powered React frontend and an Express/Node.js backend API.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Tech Stack
 
-Follow these steps:
+### Frontend
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+| Technology | Purpose |
+|---|---|
+| React 18 + TypeScript | UI framework |
+| Vite | Build tool & dev server |
+| Tailwind CSS | Utility-first styling |
+| shadcn/ui | Component library |
+| React Router v6 | Client-side routing |
+| Zustand / Context | State management |
+| React Query | Server state & caching |
+| Zod | Schema validation |
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Backend
 
-# Step 3: Install the necessary dependencies.
-npm i
+| Technology | Purpose |
+|---|---|
+| Node.js + Express | HTTP server |
+| TypeScript | Type safety |
+| MongoDB + Mongoose | Database & ODM |
+| JWT (access + refresh) | Authentication |
+| bcryptjs | Password hashing |
+| Zod | Request validation |
+| multer | File upload handling |
+| Backblaze B2 (S3 API) | Private image storage |
+| Helmet | Security headers |
+| CORS | Cross-origin configuration |
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+---
+
+## Prerequisites
+
+- **Node.js** ≥ 18.x (LTS recommended)
+- **MongoDB Atlas** account (free tier works) — you'll need a connection string
+- **Backblaze B2** account — create a private bucket and generate an Application Key with read/write access scoped to that bucket
+- Package manager: **npm** (recommended; project ships with `package-lock.json`)
+
+---
+
+## Project Structure
+
+```
+Beejveda/
+├── src/                     # React frontend (Vite)
+├── public/                  # Static assets
+├── package.json             # Frontend dependencies
+├── vite.config.ts
+├── README.md
+├── .env.example             # Frontend env template
+│
+└── server/                  # Backend API (separate Node project)
+    ├── package.json
+    ├── tsconfig.json
+    ├── .env.example         # Backend env template
+    ├── scripts/
+    │   └── seed.ts          # Database seed script
+    └── src/
+        ├── index.ts         # Server entry point
+        ├── app.ts           # Express app setup & middleware
+        ├── config/          # Environment, DB, B2 config
+        ├── models/          # Mongoose schemas
+        ├── controllers/     # Route handlers
+        ├── routes/          # Express routers
+        ├── middleware/       # Auth, admin, error, validation, upload
+        ├── validators/      # Zod schemas
+        └── utils/           # Helpers (ApiError, tokens, slugify, B2)
+```
+
+---
+
+## Getting Started
+
+### Frontend
+
+```bash
+# From project root
+npm install
+cp .env.example .env        # Set VITE_API_URL if needed
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Frontend runs at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Backend
 
-**Use GitHub Codespaces**
+```bash
+cd server
+npm install
+cp .env.example .env        # Fill in all required values
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Seed the database** (populates categories + products):
 
-## What technologies are used for this project?
+```bash
+npm run seed
+```
 
-This project is built with:
+**Start the dev server** (auto-restarts on changes):
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+npm run dev
+```
 
-## How can I deploy this project?
+Backend runs at `http://localhost:5000`.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
+## Environment Variables
 
-Yes, you can!
+### Frontend (`.env`)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+| Variable | Description | Default |
+|---|---|---|
+| `VITE_API_URL` | Backend API base URL | `http://localhost:5000/api` |
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Backend (`server/.env`)
+
+| Variable | Description | Required |
+|---|---|---|
+| `PORT` | Server port | No (default: `5000`) |
+| `NODE_ENV` | `development` / `production` / `test` | No (default: `development`) |
+| `CORS_ORIGIN` | Allowed origins (comma-separated) | No (default: `http://localhost:5173`) |
+| `MONGODB_URI` | MongoDB Atlas connection string | **Yes** |
+| `JWT_SECRET` | Access token signing secret | **Yes** |
+| `JWT_EXPIRES_IN` | Access token TTL | No (default: `15m`) |
+| `JWT_REFRESH_SECRET` | Refresh token signing secret | **Yes** |
+| `JWT_REFRESH_EXPIRES_IN` | Refresh token TTL | No (default: `30d`) |
+| `B2_KEY_ID` | Backblaze B2 key ID | **Yes** |
+| `B2_APPLICATION_KEY` | Backblaze B2 application key | **Yes** |
+| `B2_BUCKET_NAME` | B2 bucket name | **Yes** |
+| `B2_BUCKET_ID` | B2 bucket ID | **Yes** |
+| `B2_ENDPOINT` | B2 S3-compatible endpoint URL | **Yes** |
+| `B2_REGION` | B2 region | No (default: `us-east-005`) |
+| `B2_SIGNED_URL_EXPIRY_SECONDS` | Presigned URL lifetime | No (default: `3600`) |
+
+---
+
+## API Overview
+
+### Public Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Health check |
+| POST | `/api/auth/register` | Register a new customer |
+| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/logout` | Logout (clears refresh cookie) |
+| POST | `/api/auth/refresh` | Refresh access token |
+| GET | `/api/products` | List products (filterable, paginated) |
+| GET | `/api/products/:slug` | Get product by slug |
+| GET | `/api/categories` | List active categories with product counts |
+| GET | `/api/categories/:slug` | Get category by slug |
+| GET | `/api/reviews/product/:productId` | List reviews for a product |
+
+### Protected Endpoints (require `Authorization: Bearer <token>`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/auth/me` | Get current user profile |
+| GET | `/api/cart` | Get user cart (populated with live prices) |
+| POST | `/api/cart/items` | Add item to cart |
+| PATCH | `/api/cart/items/:itemId` | Update cart item quantity |
+| DELETE | `/api/cart/items/:itemId` | Remove item from cart |
+| DELETE | `/api/cart` | Clear cart |
+| POST | `/api/orders` | Create order from cart |
+| GET | `/api/orders` | Get user's orders |
+| GET | `/api/orders/:id` | Get order detail |
+| POST | `/api/reviews` | Create a review |
+
+### Admin Endpoints (require admin role)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/admin/products` | Create product |
+| GET | `/api/admin/products` | List all products (incl. inactive) |
+| GET | `/api/admin/products/:id` | Get product by ID |
+| PATCH | `/api/admin/products/:id` | Update product |
+| DELETE | `/api/admin/products/:id` | Soft/hard delete product |
+| POST | `/api/admin/products/:id/variants` | Add variant |
+| PATCH | `/api/admin/products/:id/variants/:vid` | Update variant |
+| DELETE | `/api/admin/products/:id/variants/:vid` | Delete variant |
+| POST | `/api/admin/categories` | Create category |
+| GET | `/api/admin/categories` | List all categories |
+| PATCH | `/api/admin/categories/:id` | Update category |
+| DELETE | `/api/admin/categories/:id` | Delete category |
+| GET | `/api/admin/orders` | List all orders (filterable) |
+| GET | `/api/admin/orders/:id` | Get order detail |
+| PATCH | `/api/admin/orders/:id/status` | Update order status |
+| GET | `/api/admin/users` | List users |
+| PATCH | `/api/admin/users/:id/role` | Update user role |
+| POST | `/api/upload/product/:id` | Upload product image (multipart) |
+| DELETE | `/api/upload/product/:id/image/:key` | Delete product image |
+| POST | `/api/upload/category/:id` | Upload category image (multipart) |
+| DELETE | `/api/upload/category/:id/image` | Delete category image |
+
+---
+
+## Available Scripts
+
+### Frontend
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Start Vite dev server |
+| `npm run build` | Production build |
+| `npm run preview` | Preview production build |
+| `npm run lint` | Run ESLint |
+
+### Backend (`cd server`)
+
+| Script | Description |
+|---|---|
+| `npm run dev` | Start dev server with hot-reload (tsx watch) |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm run start` | Run compiled server |
+| `npm run seed` | Seed database with categories & products |
+
+---
+
+## Deployment Notes
+
+- **Frontend**: Deploy the built `dist/` folder to any static host (Vercel, Netlify, Cloudflare Pages). Set `VITE_API_URL` to your production backend URL.
+- **Backend**: Deploy to any Node.js host (Railway, Render, Fly.io, a VPS). Set `CORS_ORIGIN` to your production frontend URL.
+- **Database**: MongoDB Atlas M0 (free tier) is sufficient for development and small production workloads.
+- **Storage**: Backblaze B2 is cost-effective for image storage. Application keys should be scoped to read+write on your bucket only.
+
+---
+
+## License
+
+Private — © BeejVeda Naturals

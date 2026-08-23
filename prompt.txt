@@ -1,0 +1,3 @@
+tasks that i want you to do:
+1. i want you to wire backend and fronted and write the same in .env so that i want to test the same in local
+2. create admin ui, make sure that ui is consistent and works for all system(responsive) such that it should align with the exisiting styling and theme
