@@ -1,35 +1,28 @@
 import { useState } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ProductCard } from "@/components/ProductCard";
-import { products, categories } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useProducts, useCategories } from "@/hooks/useProducts";
 
 export default function Shop() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState("featured");
+  const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || product.categorySlug === selectedCategory;
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => {
-    switch (sortBy) {
-      case "price-low":
-        return a.price - b.price;
-      case "price-high":
-        return b.price - a.price;
-      case "rating":
-        return b.rating - a.rating;
-      default:
-        return 0;
-    }
-  });
+  // Build API query params
+  const queryParams: Record<string, any> = {
+    limit: 50,
+  };
+  if (searchQuery) queryParams.search = searchQuery;
+  if (selectedCategory) queryParams.category = selectedCategory;
+  if (sortBy) queryParams.sort = sortBy;
+
+  const { mappedProducts, isLoading, isError } = useProducts(queryParams);
+  const { mappedCategories } = useCategories();
 
   return (
     <Layout>
@@ -40,7 +33,8 @@ export default function Shop() {
             Shop All Products
           </h1>
           <p className="text-primary-foreground/80 max-w-2xl mx-auto">
-            Explore our complete range of organic superfoods, herbal teas, microgreens, and wellness products.
+            Explore our complete range of organic superfoods, herbal teas,
+            microgreens, and wellness products.
           </p>
         </div>
       </section>
@@ -65,10 +59,11 @@ export default function Shop() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-2 rounded-lg border border-input bg-background text-sm"
               >
-                <option value="featured">Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
+                <option value="newest">Newest</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
                 <option value="rating">Top Rated</option>
+                <option value="name">Name A-Z</option>
               </select>
               <Button
                 variant="outline"
@@ -82,14 +77,24 @@ export default function Shop() {
 
           <div className="flex gap-8">
             {/* Sidebar Filters */}
-            <aside className={cn(
-              "w-64 shrink-0 space-y-6",
-              showFilters ? "fixed inset-0 z-50 bg-card p-6 overflow-auto sm:relative sm:bg-transparent sm:p-0" : "hidden sm:block"
-            )}>
+            <aside
+              className={cn(
+                "w-64 shrink-0 space-y-6",
+                showFilters
+                  ? "fixed inset-0 z-50 bg-card p-6 overflow-auto sm:relative sm:bg-transparent sm:p-0"
+                  : "hidden sm:block"
+              )}
+            >
               {showFilters && (
                 <div className="flex items-center justify-between sm:hidden mb-4">
-                  <h3 className="font-display font-semibold text-lg">Filters</h3>
-                  <Button variant="ghost" size="icon" onClick={() => setShowFilters(false)}>
+                  <h3 className="font-display font-semibold text-lg">
+                    Filters
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowFilters(false)}
+                  >
                     <X className="w-5 h-5" />
                   </Button>
                 </div>
@@ -97,24 +102,30 @@ export default function Shop() {
 
               {/* Categories */}
               <div>
-                <h3 className="font-display font-semibold text-lg mb-4">Categories</h3>
+                <h3 className="font-display font-semibold text-lg mb-4">
+                  Categories
+                </h3>
                 <div className="space-y-2">
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className={cn(
                       "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
-                      !selectedCategory ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+                      !selectedCategory
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-secondary"
                     )}
                   >
-                    All Products ({products.length})
+                    All Products
                   </button>
-                  {categories.map((cat) => (
+                  {mappedCategories.map((cat) => (
                     <button
                       key={cat.id}
                       onClick={() => setSelectedCategory(cat.slug)}
                       className={cn(
                         "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
-                        selectedCategory === cat.slug ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
+                        selectedCategory === cat.slug
+                          ? "bg-primary text-primary-foreground"
+                          : "hover:bg-secondary"
                       )}
                     >
                       {cat.name} ({cat.productCount})
@@ -128,13 +139,40 @@ export default function Shop() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground">
-                  Showing {filteredProducts.length} products
+                  {isLoading
+                    ? "Loading products..."
+                    : `Showing ${mappedProducts.length} products`}
                 </p>
               </div>
 
-              {filteredProducts.length > 0 ? (
+              {isLoading ? (
                 <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                  {filteredProducts.map((product, index) => (
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="bg-card rounded-2xl overflow-hidden animate-pulse"
+                    >
+                      <div className="aspect-square bg-secondary/50" />
+                      <div className="p-4 space-y-3">
+                        <div className="h-3 bg-secondary/50 rounded w-1/3" />
+                        <div className="h-4 bg-secondary/50 rounded w-2/3" />
+                        <div className="h-3 bg-secondary/50 rounded w-1/4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : isError ? (
+                <div className="text-center py-16">
+                  <p className="text-destructive text-lg mb-4">
+                    Failed to load products. Make sure the backend is running.
+                  </p>
+                  <Button onClick={() => window.location.reload()}>
+                    Try Again
+                  </Button>
+                </div>
+              ) : mappedProducts.length > 0 ? (
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                  {mappedProducts.map((product, index) => (
                     <div
                       key={product.id}
                       className="animate-fade-up"
@@ -149,7 +187,12 @@ export default function Shop() {
                   <p className="text-muted-foreground text-lg mb-4">
                     No products found matching your criteria.
                   </p>
-                  <Button onClick={() => { setSearchQuery(""); setSelectedCategory(null); }}>
+                  <Button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setSelectedCategory(null);
+                    }}
+                  >
                     Clear Filters
                   </Button>
                 </div>

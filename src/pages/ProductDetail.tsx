@@ -2,40 +2,68 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { getProductBySlug, getProductsByCategory } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { useProduct, useProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
-import { 
-  Star, 
-  Heart, 
-  ShoppingCart, 
-  Minus, 
-  Plus, 
-  Truck, 
-  Shield, 
+import {
+  Star,
+  Heart,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Truck,
+  Shield,
   RefreshCcw,
   Check,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const product = getProductBySlug(slug || "");
+  const { mappedProduct: product, isLoading, isError } = useProduct(slug);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<"benefits" | "ingredients" | "howToUse">("benefits");
-  
+  const [activeTab, setActiveTab] = useState<
+    "benefits" | "ingredients" | "howToUse"
+  >("benefits");
+
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const inWishlist = product ? isInWishlist(product.id) : false;
 
-  if (!product) {
+  // Fetch related products from same category
+  const { mappedProducts: relatedProducts } = useProducts({
+    category: product?.categorySlug || undefined,
+    limit: 4,
+  });
+
+  const filteredRelated = relatedProducts
+    .filter((p) => p.id !== product?.id)
+    .slice(0, 4);
+
+  if (isLoading) {
     return (
       <Layout>
         <div className="container py-20 text-center">
-          <h1 className="font-display text-3xl font-bold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
+          <div className="animate-pulse-soft text-muted-foreground">
+            Loading product...
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isError || !product) {
+    return (
+      <Layout>
+        <div className="container py-20 text-center">
+          <h1 className="font-display text-3xl font-bold mb-4">
+            Product Not Found
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            The product you're looking for doesn't exist.
+          </p>
           <Link to="/shop">
             <Button>Browse All Products</Button>
           </Link>
@@ -44,12 +72,10 @@ export default function ProductDetail() {
     );
   }
 
-  const relatedProducts = getProductsByCategory(product.categorySlug)
-    .filter(p => p.id !== product.id)
-    .slice(0, 4);
-
   const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    ? Math.round(
+        ((product.originalPrice - product.price) / product.originalPrice) * 100
+      )
     : 0;
 
   return (
@@ -58,11 +84,24 @@ export default function ProductDetail() {
       <div className="bg-secondary/30">
         <div className="container py-3">
           <nav className="flex items-center gap-2 text-sm">
-            <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+            <Link
+              to="/"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Home
+            </Link>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <Link to="/shop" className="text-muted-foreground hover:text-foreground">Shop</Link>
+            <Link
+              to="/shop"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Shop
+            </Link>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <Link to={`/category/${product.categorySlug}`} className="text-muted-foreground hover:text-foreground">
+            <Link
+              to={`/category/${product.categorySlug}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
               {product.category}
             </Link>
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -77,11 +116,17 @@ export default function ProductDetail() {
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="aspect-square rounded-2xl overflow-hidden bg-secondary/30">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                    No image
+                  </div>
+                )}
               </div>
             </div>
 
@@ -90,13 +135,20 @@ export default function ProductDetail() {
               {/* Badges */}
               <div className="flex gap-2 mb-4">
                 {product.badge && (
-                  <span className={cn(
-                    "px-3 py-1 text-xs font-semibold rounded-full",
-                    product.badge === "Bestseller" && "bg-gold text-primary-foreground",
-                    product.badge === "New" && "bg-leaf text-primary-foreground",
-                    product.badge === "Premium" && "bg-primary text-primary-foreground",
-                    !["Bestseller", "New", "Premium"].includes(product.badge) && "bg-secondary text-secondary-foreground"
-                  )}>
+                  <span
+                    className={cn(
+                      "px-3 py-1 text-xs font-semibold rounded-full",
+                      product.badge === "Bestseller" &&
+                        "bg-gold text-primary-foreground",
+                      product.badge === "New" &&
+                        "bg-leaf text-primary-foreground",
+                      product.badge === "Premium" &&
+                        "bg-primary text-primary-foreground",
+                      !["Bestseller", "New", "Premium"].includes(
+                        product.badge
+                      ) && "bg-secondary text-secondary-foreground"
+                    )}
+                  >
                     {product.badge}
                   </span>
                 )}
@@ -128,13 +180,17 @@ export default function ProductDetail() {
                       key={i}
                       className={cn(
                         "w-5 h-5",
-                        i < Math.floor(product.rating) ? "fill-gold text-gold" : "fill-muted text-muted"
+                        i < Math.floor(product.rating)
+                          ? "fill-gold text-gold"
+                          : "fill-muted text-muted"
                       )}
                     />
                   ))}
                 </div>
                 <span className="font-medium">{product.rating}</span>
-                <span className="text-muted-foreground">({product.reviews} reviews)</span>
+                <span className="text-muted-foreground">
+                  ({product.reviews} reviews)
+                </span>
               </div>
 
               {/* Description */}
@@ -144,13 +200,17 @@ export default function ProductDetail() {
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-3xl font-bold text-foreground">₹{product.price}</span>
+                <span className="text-3xl font-bold text-foreground">
+                  ₹{product.price}
+                </span>
                 {product.originalPrice && (
                   <span className="text-xl text-muted-foreground line-through">
                     ₹{product.originalPrice}
                   </span>
                 )}
-                <span className="text-muted-foreground text-sm">/ {product.weight}</span>
+                <span className="text-muted-foreground text-sm">
+                  / {product.weight}
+                </span>
               </div>
 
               {/* Quantity & Add to Cart */}
@@ -162,7 +222,9 @@ export default function ProductDetail() {
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
+                  <span className="w-12 text-center font-medium">
+                    {quantity}
+                  </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     className="p-3 hover:bg-secondary transition-colors"
@@ -170,32 +232,36 @@ export default function ProductDetail() {
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
-                <Button 
-                  size="lg" 
-                  className="flex-1" 
+                <Button
+                  size="lg"
+                  className="flex-1"
                   disabled={!product.inStock}
                   onClick={() => addToCart(product, quantity)}
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   {product.inStock ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   variant="outline"
-                  className={cn(inWishlist && "bg-destructive/10 border-destructive text-destructive")}
+                  className={cn(
+                    inWishlist &&
+                      "bg-destructive/10 border-destructive text-destructive"
+                  )}
                   onClick={() => addToWishlist(product)}
                 >
-                  <Heart className={cn("w-5 h-5", inWishlist && "fill-current")} />
+                  <Heart
+                    className={cn("w-5 h-5", inWishlist && "fill-current")}
+                  />
                 </Button>
               </div>
 
               {/* Buy Now */}
               {product.inStock && (
                 <Link to="/cart">
-                  <Button 
-                    size="lg" 
-                    variant="gold" 
-                    className="w-full mb-8"
+                  <Button
+                    size="lg"
+                    className="w-full mb-8 bg-gold hover:bg-gold/90 text-primary-foreground"
                     onClick={() => addToCart(product, quantity)}
                   >
                     Buy Now
@@ -228,25 +294,27 @@ export default function ProductDetail() {
           <div className="mt-16">
             <div className="border-b border-border">
               <nav className="flex gap-8">
-                {(["benefits", "ingredients", "howToUse"] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={cn(
-                      "pb-4 font-medium transition-colors relative",
-                      activeTab === tab
-                        ? "text-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {tab === "benefits" && "Benefits"}
-                    {tab === "ingredients" && "Ingredients"}
-                    {tab === "howToUse" && "How to Use"}
-                    {activeTab === tab && (
-                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
-                    )}
-                  </button>
-                ))}
+                {(["benefits", "ingredients", "howToUse"] as const).map(
+                  (tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        "pb-4 font-medium transition-colors relative",
+                        activeTab === tab
+                          ? "text-primary"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {tab === "benefits" && "Benefits"}
+                      {tab === "ingredients" && "Ingredients"}
+                      {tab === "howToUse" && "How to Use"}
+                      {activeTab === tab && (
+                        <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                      )}
+                    </button>
+                  )
+                )}
               </nav>
             </div>
 
@@ -280,11 +348,13 @@ export default function ProductDetail() {
           </div>
 
           {/* Related Products */}
-          {relatedProducts.length > 0 && (
+          {filteredRelated.length > 0 && (
             <div className="mt-16">
-              <h2 className="font-display text-2xl font-bold mb-8">You May Also Like</h2>
+              <h2 className="font-display text-2xl font-bold mb-8">
+                You May Also Like
+              </h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {relatedProducts.map((p) => (
+                {filteredRelated.map((p) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
               </div>
