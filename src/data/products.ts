@@ -1,12 +1,7 @@
-import DriedVegetablePowder from "@/assets/products/Driedvegetablepowder.png";
-import FreshMilkyMushrooms from "@/assets/products/FreshMilkyMushrooms.png";
-import TomatoPowder from "@/assets/products/TomatoPowder.png";
-import BeetrootSpinachPowderCombo from "@/assets/products/Beetroot&SpanishPowder.png";
-import OysterMushrooms from "@/assets/products/OysterMushrooms.png";
-import MilkyMushrooms from "@/assets/products/MilkyMushrooms.png";
-import DriedMushroomPowder from "@/assets/products/DriedMushroomPowder.png";
 export interface Product {
   id: string;
+  variantId?: string;
+  images?: { key: string; alt?: string; isPrimary: boolean; url: string }[];
   name: string;
   slug: string;
   category: string;
@@ -40,7 +35,7 @@ export const categories: Category[] = [
     name: "Herbal Teas",
     slug: "herbal-teas",
     description: "Organic herbal infusions for wellness",
-    image: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=400&h=400&fit=crop",
+    image: "",
     productCount: 5,
   },
   // {
@@ -58,7 +53,7 @@ export const categories: Category[] = [
     slug: "dried-vegetables-powders",
     description: "Nutrient-rich vegetable powders",
     // image: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400&h=400&fit=crop",
-    image: DriedVegetablePowder,
+    image: "",
     productCount: 2,
   },
   {
@@ -67,7 +62,7 @@ export const categories: Category[] = [
     slug: "mushrooms",
     description: "Fresh and dried medicinal mushrooms",
     // image: "https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400&h=400&fit=crop",
-    image: FreshMilkyMushrooms,
+    image: "",
     productCount: 4,
   },
   // {
@@ -91,7 +86,7 @@ export const products: Product[] = [
     price: 299,
     originalPrice: 399,
     weight: "100g",
-    image: "https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?w=400&h=400&fit=crop",
+    image: "",
     rating: 4.5,
     reviews: 124,
     badge: "Bestseller",
@@ -109,7 +104,7 @@ export const products: Product[] = [
     categorySlug: "herbal-teas",
     price: 249,
     weight: "100g",
-    image: "https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=400&h=400&fit=crop",
+    image: "",
     rating: 4.6,
     reviews: 89,
     benefits: ["Aids digestion", "Reduces inflammation", "Refreshing taste", "Caffeine-free"],
@@ -126,7 +121,7 @@ export const products: Product[] = [
     categorySlug: "herbal-teas",
     price: 329,
     weight: "75g",
-    image: "https://images.unsplash.com/photo-1558160074-4d7d8bdf4256?w=400&h=400&fit=crop",
+    image: "",
     rating: 4.7,
     reviews: 67,
     badge: "New",
@@ -144,7 +139,7 @@ export const products: Product[] = [
     categorySlug: "herbal-teas",
     price: 349,
     weight: "100g",
-    image: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=400&h=400&fit=crop",
+    image: "",
     rating: 4.5,
     reviews: 156,
     badge: "Premium",
@@ -162,7 +157,7 @@ export const products: Product[] = [
     categorySlug: "herbal-teas",
     price: 279,
     weight: "50g",
-    image: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&h=400&fit=crop",
+    image: "",
     rating: 4.6,
     reviews: 98,
     benefits: ["Promotes restful sleep", "Calms anxiety", "Soothes stomach", "Gentle and safe"],
@@ -239,7 +234,7 @@ export const products: Product[] = [
     price: 199,
     weight: "150g",
     // image: "https://images.unsplash.com/photo-1622484212850-eb596d769edc?w=400&h=400&fit=crop",
-    image: TomatoPowder,
+    image: "",
     rating: 4.6,
     reviews: 112,
     benefits: ["Rich in lycopene", "Long shelf life", "Versatile cooking", "No preservatives"],
@@ -258,7 +253,7 @@ export const products: Product[] = [
     originalPrice: 549,
     weight: "200g (100g each)",
     // image: "https://images.unsplash.com/photo-1564277287253-934c868e54ea?w=400&h=400&fit=crop",
-    image: BeetrootSpinachPowderCombo,
+    image: "",
     rating: 4.8,
     reviews: 89,
     badge: "Value Pack",
@@ -279,7 +274,7 @@ export const products: Product[] = [
     price: 149,
     weight: "250g",
     // image: "https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400&h=400&fit=crop",
-    image: MilkyMushrooms,
+    image: "",
     rating: 4.9,
     reviews: 500,
     badge: "Bestseller",
@@ -298,7 +293,7 @@ export const products: Product[] = [
     price: 179,
     weight: "200g",
     // image: "https://images.unsplash.com/photo-1615672968435-95de3c96f949?w=400&h=400&fit=crop",
-    image: OysterMushrooms,
+    image: "",
     rating: 4.8,
     reviews: 167,
     benefits: ["Immune support", "Heart healthy", "Antioxidant rich", "Meat alternative"],
@@ -316,7 +311,7 @@ export const products: Product[] = [
     price: 399,
     weight: "100g",
     // image: "https://images.unsplash.com/photo-1590779033100-9f60a05a013d?w=400&h=400&fit=crop",
-    image: DriedMushroomPowder,
+    image: "",
     rating: 4.9,
     reviews: 145,
     badge: "Superfood",
@@ -543,7 +538,3 @@ export const testimonials = [
   },
 ];
 
-export const getBestSellers = () => products.filter(p => p.badge === "Bestseller" || p.rating >= 4.8).slice(0, 6);
-export const getNewArrivals = () => products.filter(p => p.badge === "New").slice(0, 4);
-export const getProductsByCategory = (categorySlug: string) => products.filter(p => p.categorySlug === categorySlug);
-export const getProductBySlug = (slug: string) => products.find(p => p.slug === slug);

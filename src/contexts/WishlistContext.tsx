@@ -10,7 +10,6 @@ type WishlistAction =
   | { type: "ADD_ITEM"; product: Product }
   | { type: "REMOVE_ITEM"; productId: string }
   | { type: "CLEAR_WISHLIST" }
-  | { type: "LOAD_WISHLIST"; items: Product[] };
 
 interface WishlistContextType extends WishlistState {
   addToWishlist: (product: Product) => void;
@@ -39,29 +38,25 @@ function wishlistReducer(state: WishlistState, action: WishlistAction): Wishlist
     case "CLEAR_WISHLIST":
       return { ...state, items: [] };
     
-    case "LOAD_WISHLIST":
-      return { ...state, items: action.items };
-    
     default:
       return state;
   }
 }
 
-export function WishlistProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(wishlistReducer, { items: [] });
-
-  // Load wishlist from localStorage on mount
-  useEffect(() => {
+function loadWishlist(state: WishlistState): WishlistState {
+  try {
     const saved = localStorage.getItem("beejveda-wishlist");
-    if (saved) {
-      try {
-        const items = JSON.parse(saved);
-        dispatch({ type: "LOAD_WISHLIST", items });
-      } catch (e) {
-        console.error("Failed to load wishlist:", e);
-      }
-    }
-  }, []);
+    if (!saved) return state;
+    const items: unknown = JSON.parse(saved);
+    return Array.isArray(items) ? { items: items as Product[] } : state;
+  } catch (error) {
+    console.error("Failed to load wishlist:", error);
+    return state;
+  }
+}
+
+export function WishlistProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(wishlistReducer, { items: [] }, loadWishlist);
 
   // Save wishlist to localStorage on change
   useEffect(() => {

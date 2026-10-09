@@ -86,14 +86,23 @@ userSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Ensure at least one default address
+// Ensure exactly one default address, and derive one when the address book is saved.
 userSchema.pre("save", function (next) {
-  if (this.addresses.length > 0) {
-    const hasDefault = this.addresses.some((a) => a.isDefault);
-    if (!hasDefault) {
-      this.addresses[0].isDefault = true;
-    }
+  if (!Array.isArray(this.addresses) || this.addresses.length === 0) {
+    return next();
   }
+
+  const defaultEntries = this.addresses.filter((a) => a.isDefault);
+
+  if (defaultEntries.length === 0) {
+    this.addresses[0].isDefault = true;
+  } else if (defaultEntries.length > 1) {
+    this.addresses.forEach((a) => {
+      a.isDefault = a === this.addresses[0] ? true : false;
+    });
+    this.addresses[0].isDefault = true;
+  }
+
   next();
 });
 

@@ -3,15 +3,18 @@ import { cartApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function useCartAPI() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const queryClient = useQueryClient();
+  const queryKey = ["cart", user?._id] as const;
 
   const cartQuery = useQuery({
-    queryKey: ["cart"],
+    queryKey,
     queryFn: () => cartApi.get(),
     enabled: isAuthenticated,
     staleTime: 30 * 1000,
   });
+
+  const refreshCart = () => queryClient.invalidateQueries({ queryKey });
 
   const addItemMutation = useMutation({
     mutationFn: ({
@@ -23,8 +26,8 @@ export function useCartAPI() {
       variantId: string;
       quantity: number;
     }) => cartApi.addItem(productId, variantId, quantity),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    onSuccess: async () => {
+      await refreshCart();
     },
   });
 
@@ -36,28 +39,35 @@ export function useCartAPI() {
       itemId: string;
       quantity: number;
     }) => cartApi.updateItem(itemId, quantity),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    onSuccess: async () => {
+      await refreshCart();
     },
   });
 
   const removeItemMutation = useMutation({
     mutationFn: (itemId: string) => cartApi.removeItem(itemId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    onSuccess: async () => {
+      await refreshCart();
     },
   });
 
   const clearMutation = useMutation({
     mutationFn: () => cartApi.clear(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+    onSuccess: async () => {
+      await refreshCart();
     },
   });
 
   return {
     cart: cartQuery.data,
     isLoading: cartQuery.isLoading,
+    isFetching: cartQuery.isFetching,
+    isError: cartQuery.isError,
+    isMutating:
+      addItemMutation.isPending ||
+      updateItemMutation.isPending ||
+      removeItemMutation.isPending ||
+      clearMutation.isPending,
     addItem: addItemMutation.mutateAsync,
     updateItem: updateItemMutation.mutateAsync,
     removeItem: removeItemMutation.mutateAsync,

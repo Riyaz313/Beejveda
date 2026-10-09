@@ -93,6 +93,34 @@ export const logout = asyncHandler(async (_req: Request, res: Response) => {
   res.json({ success: true, message: "Logged out" });
 });
 
+// PATCH /api/auth/me
+export const updateMe = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const user = await User.findById(req.user!._id);
+  if (!user) {
+    throw ApiError.notFound("User not found");
+  }
+
+  const { name, phone, addresses } = req.body;
+
+  if (typeof name === "string") user.name = name.trim();
+  if (typeof phone === "string") user.phone = phone.trim();
+  if (Array.isArray(addresses)) user.addresses = addresses;
+
+  await user.save();
+
+  res.json({
+    success: true,
+    data: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      addresses: user.addresses,
+    },
+  });
+});
+
 // GET /api/auth/me
 export const getMe = asyncHandler(async (req: AuthRequest, res: Response) => {
   const user = await User.findById(req.user!._id);

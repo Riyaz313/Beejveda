@@ -2,10 +2,13 @@ import { useState, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { getBestSellers } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 export function BestSellersSection() {
-  const products = getBestSellers();
+  const { mappedProducts } = useProducts({ limit: 50 });
+  const products = mappedProducts
+    .filter((product) => product.badge === "Bestseller" || product.rating >= 4.8)
+    .slice(0, 6);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);

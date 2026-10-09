@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { categories } from "@/data/products";
 import { ArrowRight } from "lucide-react";
+import { useCategories } from "@/hooks/useProducts";
 
 export function CategoriesSection() {
+  const { mappedCategories: categories } = useCategories();
   return (
     <section className="py-20 bg-background">
       <div className="container">
@@ -28,11 +29,13 @@ export function CategoriesSection() {
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Image */}
-              <img
-                src={category.image}
-                alt={category.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-              />
+              {category.image && (
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+              )}
               
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/40 to-transparent" />

@@ -1,3 +1,4 @@
+import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,9 +41,39 @@ const certifications = [
 ];
 
 export function Footer() {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
+  const handleNewsletterSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email.trim()) return;
+
+    setIsSubmitting(true);
+    setFeedback("");
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/newsletter/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || "Unable to subscribe.");
+
+      setFeedback("You are subscribed for BeejVeda offers and wellness updates.");
+      setEmail("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to subscribe.";
+      setFeedback(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="bg-primary text-primary-foreground">
-      {/* Newsletter Section */}
       <div className="border-b border-primary-foreground/10">
         <div className="container py-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -54,16 +85,24 @@ export function Footer() {
                 Subscribe for exclusive offers, health tips & new product launches
               </p>
             </div>
-            <div className="flex w-full max-w-md gap-3">
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50"
-              />
-              <Button variant="gold" className="shrink-0">
-                Subscribe
-              </Button>
-            </div>
+            <form onSubmit={handleNewsletterSubmit} className="flex w-full max-w-md flex-col gap-2">
+              <div className="flex gap-3">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Enter your email"
+                  className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50"
+                  required
+                />
+                <Button type="submit" variant="gold" className="shrink-0" disabled={isSubmitting}>
+                  {isSubmitting ? "Joining..." : "Subscribe"}
+                </Button>
+              </div>
+              {feedback && (
+                <p className="text-sm text-primary-foreground/80">{feedback}</p>
+              )}
+            </form>
           </div>
         </div>
       </div>

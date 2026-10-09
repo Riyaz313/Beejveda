@@ -2,10 +2,11 @@ import { Response } from "express";
 import mongoose from "mongoose";
 import Order from "../models/Order.model.js";
 import Cart from "../models/Cart.model.js";
-import Product from "../models/Product.model.js";
+import Product, { deriveVariantDisplayLabel } from "../models/Product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
+import { sendOrderPlacedEmail } from "../utils/email.js";
 
 // POST /api/orders — create order from cart
 export const createOrder = asyncHandler(
@@ -17,11 +18,11 @@ export const createOrder = asyncHandler(
       throw ApiError.badRequest("Cart is empty");
     }
 
-    // Use a transaction for atomic stock decrement
     const session = await mongoose.startSession();
-    session.startTransaction();
 
     try {
+      await session.startTransaction();
+
       const orderItems = [];
       let itemsTotal = 0;
 
@@ -32,28 +33,30 @@ export const createOrder = asyncHandler(
         const variant = (product.variants as any).id(cartItem.variantId);
         if (!variant) throw ApiError.notFound("Variant not found");
 
+        const displayLabel = deriveVariantDisplayLabel(variant);
+
         if (variant.stock < cartItem.quantity) {
           throw ApiError.badRequest(
-            `Insufficient stock for ${product.name} (${variant.displayLabel}) — only ${variant.stock} available`
+            `Insufficient stock for ${product.name} (${displayLabel}) — only ${variant.stock} available`
           );
         }
 
-        // Atomically decrement stock (race-condition safe)
+        const updateQuery: any = {
+          _id: product._id,
+          "variants._id": variant._id,
+          "variants.stock": { $gte: cartItem.quantity },
+        };
+        const updateOptions: any = { new: true, session };
+
         const updateResult = await Product.findOneAndUpdate(
-          {
-            _id: product._id,
-            "variants._id": variant._id,
-            "variants.stock": { $gte: cartItem.quantity },
-          },
-          {
-            $inc: { "variants.$.stock": -cartItem.quantity },
-          },
-          { session, new: true }
+          updateQuery,
+          { $inc: { "variants.$.stock": -cartItem.quantity } },
+          updateOptions
         );
 
         if (!updateResult) {
           throw ApiError.badRequest(
-            `Stock changed for ${product.name} (${variant.displayLabel}) — please try again`
+            `Stock changed for ${product.name} (${displayLabel}) — please try again`
           );
         }
 
@@ -61,7 +64,6 @@ export const createOrder = asyncHandler(
         const lineTotal = unitPrice * cartItem.quantity;
         itemsTotal += lineTotal;
 
-        // Find primary image or first image
         const primaryImage = product.images.find((img) => img.isPrimary) || product.images[0];
 
         orderItems.push({
@@ -72,7 +74,7 @@ export const createOrder = asyncHandler(
             unitType: variant.unitType,
             value: variant.value,
             unit: variant.unit,
-            displayLabel: variant.displayLabel,
+            displayLabel,
           },
           unitPrice,
           quantity: cartItem.quantity,
@@ -80,7 +82,6 @@ export const createOrder = asyncHandler(
         });
       }
 
-      // Shipping logic: free above ₹999
       const shippingFee = itemsTotal >= 999 ? 0 : 99;
       const grandTotal = itemsTotal + shippingFee;
 
@@ -99,18 +100,24 @@ export const createOrder = asyncHandler(
         { session }
       );
 
-      // Clear cart
       cart.items = [];
       await cart.save({ session });
 
       await session.commitTransaction();
 
+      const hydratedOrder = await Order.findById(order._id).populate("user", "name email");
+      if (hydratedOrder) {
+        await sendOrderPlacedEmail(hydratedOrder as any);
+      }
+
       res.status(201).json({ success: true, data: order });
     } catch (error) {
-      await session.abortTransaction();
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
       throw error;
     } finally {
-      session.endSession();
+      await session.endSession();
     }
   }
 );

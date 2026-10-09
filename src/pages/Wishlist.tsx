@@ -4,9 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Heart, ArrowRight } from "lucide-react";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { ProductCard } from "@/components/ProductCard";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function Wishlist() {
   const { items, clearWishlist } = useWishlist();
+  const { mappedProducts: currentProducts } = useProducts({ limit: 100 });
+  const productsBySlug = new Map(currentProducts.map((product) => [product.slug, product]));
+  const displayItems = items.map((savedProduct) => {
+    const currentProduct = productsBySlug.get(savedProduct.slug);
+    return currentProduct
+      ? { ...currentProduct, id: savedProduct.id }
+      : { ...savedProduct, image: "" };
+  });
 
   return (
     <Layout>
@@ -25,7 +34,7 @@ export default function Wishlist() {
             )}
           </div>
 
-          {items.length === 0 ? (
+          {displayItems.length === 0 ? (
             <div className="text-center py-16">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-secondary/50 flex items-center justify-center">
                 <Heart className="w-12 h-12 text-muted-foreground" />
@@ -45,7 +54,7 @@ export default function Wishlist() {
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {items.map((product, index) => (
+              {displayItems.map((product, index) => (
                 <div
                   key={product.id}
                   className="animate-fade-up"

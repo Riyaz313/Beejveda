@@ -331,7 +331,6 @@ async function seed() {
       brand: "Beejveda",
       ratingsAverage: p.rating || 0,
       ratingsCount: p.reviews || 0,
-      images: [], // real images uploaded via admin endpoint
       variants: [
         {
           unitType: variantData.unitType,

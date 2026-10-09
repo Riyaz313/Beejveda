@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { adminApi, categoriesApi } from "@/lib/api";
+import { adminApi, categoriesApi, uploadApi } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -138,6 +138,39 @@ export default function AdminProducts() {
     setEditingProduct(null);
   };
 
+  // Image upload state and handlers
+  const [imgUploading, setImgUploading] = useState(false);
+
+  const handleImageUpload = async (file: File) => {
+    if (!editingProduct) return;
+    setImgUploading(true);
+    try {
+      await uploadApi.productImage(editingProduct._id, file);
+      toast.success("Image uploaded");
+      // Refresh current product data
+      const res: any = await adminApi.getProductById(editingProduct._id);
+      setEditingProduct(res.data);
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setImgUploading(false);
+    }
+  };
+
+  const handleDeleteImage = async (key: string) => {
+    if (!editingProduct) return;
+    try {
+      await uploadApi.deleteProductImage(editingProduct._id, key);
+      toast.success("Image deleted");
+      const res: any = await adminApi.getProductById(editingProduct._id);
+      setEditingProduct(res.data);
+      queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    } catch (err: any) {
+      toast.error(err.message || "Delete failed");
+    }
+  };
+
   const openCreateDialog = () => {
     resetForm();
     setDialogOpen(true);
@@ -213,8 +246,9 @@ export default function AdminProducts() {
 
   const productsData = productsQuery.data as any;
   const categoriesData = categoriesQuery.data as any;
-  const products = productsData?.data?.products || [];
-  const totalPages = productsData?.data?.pages || 1;
+  const productsResult = productsData?.data ?? productsData;
+  const products = productsResult?.products || [];
+  const totalPages = productsResult?.pages || 1;
 
   const getCategoryName = (cat: any) => {
     if (typeof cat === "object" && cat?.name) return cat.name;
@@ -252,6 +286,11 @@ export default function AdminProducts() {
               <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
               Loading products...
             </div>
+          ) : productsQuery.isError ? (
+            <div className="p-8 text-center">
+              <p className="text-sm text-destructive">Unable to load products: {(productsQuery.error as Error).message}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => void productsQuery.refetch()}>Try again</Button>
+            </div>
           ) : products.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
               No products found
@@ -283,6 +322,9 @@ export default function AdminProducts() {
                     const defaultVariant =
                       product.variants?.find((v: any) => v.isDefault) ||
                       product.variants?.[0];
+                    const primaryImage =
+                      product.images?.find((image: any) => image.isPrimary)?.url ||
+                      product.images?.[0]?.url;
 
                     return (
                       <tr
@@ -291,8 +333,16 @@ export default function AdminProducts() {
                       >
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center shrink-0 text-xs text-muted-foreground">
-                              {product.images?.length > 0 ? "📷" : "—"}
+                            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-secondary">
+                              {primaryImage ? (
+                                <img
+                                  src={primaryImage}
+                                  alt={product.images?.find((image: any) => image.isPrimary)?.alt || product.name}
+                                  className="h-full w-full object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">No image</div>
+                              )}
                             </div>
                             <div className="min-w-0">
                               <p className="font-medium truncate max-w-[200px]">
@@ -613,6 +663,47 @@ export default function AdminProducts() {
                 />
               </div>
             </div>
+
+            {/* Images: preview, upload, delete */}
+            {editingProduct && (
+              <div className="space-y-2">
+                <Label>Images</Label>
+                <div className="flex flex-wrap gap-3">
+                  {(editingProduct.images || []).map((img: any) => (
+                    <div key={img.key} className="w-28">
+                      <div className="w-28 h-20 bg-muted rounded overflow-hidden mb-1">
+                        {img.url ? (
+                          // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                          <img src={img.url} alt={img.alt || "product image"} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No preview</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteImage(img.key)}>
+                          Delete
+                        </Button>
+                        {img.isPrimary && <span className="text-xs text-muted-foreground">Primary</span>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    id="product-image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleImageUpload(f);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  {imgUploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                </div>
+              </div>
+            )}
 
             <DialogFooter>
               <Button

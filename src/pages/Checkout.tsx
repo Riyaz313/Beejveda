@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -7,19 +7,25 @@ import { Label } from "@/components/ui/label";
 import { useCart } from "@/contexts/CartContext";
 import { useCartAPI } from "@/hooks/useCartAPI";
 import { useAuth } from "@/contexts/AuthContext";
-import { ordersApi } from "@/lib/api";
+import { authApi, ordersApi } from "@/lib/api";
+import { useProducts } from "@/hooks/useProducts";
 import { ArrowLeft, CreditCard, Truck, Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user, updateUser } = useAuth();
+  const nameParts = (user?.name || "").trim().split(/\s+/);
+  const firstNameFromUser = nameParts[0] || "";
+  const lastNameFromUser = nameParts.slice(1).join(" ") || "";
 
   // Local cart for guests
   const { items: localItems, total: localTotal, clearCart: localClear } = useCart();
 
   // API cart for logged-in users
   const { cart: apiCart, isLoading: apiLoading, clearCart: apiClear } = useCartAPI();
+  const { mappedProducts: catalogProducts } = useProducts({ limit: 100 });
+  const apiImageBySlug = new Map(catalogProducts.map((product) => [product.slug, product.image]));
 
   const isUsingApi = isAuthenticated;
   const displayItems = isUsingApi
@@ -30,6 +36,7 @@ export default function Checkout() {
         image:
           item.product.images?.find((img) => img.isPrimary)?.url ||
           item.product.images?.[0]?.url ||
+          apiImageBySlug.get(item.product.slug) ||
           "",
         variantLabel: item.variant.displayLabel,
         price: item.variant.price,
@@ -40,7 +47,7 @@ export default function Checkout() {
         id: item.product.id,
         name: item.product.name,
         slug: item.product.slug,
-        image: item.product.image,
+        image: apiImageBySlug.get(item.product.slug) || "",
         variantLabel: item.product.weight,
         price: item.product.price,
         quantity: item.quantity,
@@ -52,13 +59,53 @@ export default function Checkout() {
   const grandTotal = displayTotal + shipping;
 
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [saveAddressToBook, setSaveAddressToBook] = useState(false);
+
+  const clearAddressSelection = () => setSelectedAddressId("");
 
   // Shipping form state
+  const [firstName, setFirstName] = useState(firstNameFromUser);
+  const [lastName, setLastName] = useState(lastNameFromUser);
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [address, setAddress] = useState("");
   const [address2, setAddress2] = useState("");
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
+
+  useEffect(() => {
+    if (!isAuthenticated || !Array.isArray(user?.addresses) || user.addresses.length === 0) {
+      return;
+    }
+
+    const defaultAddress =
+      user.addresses.find((addr: any) => addr.isDefault) || user.addresses[0];
+
+    if (!defaultAddress) return;
+
+    setSelectedAddressId(defaultAddress._id || "");
+    setAddress(defaultAddress.address || "");
+    setAddress2(defaultAddress.address2 || "");
+    setCity(defaultAddress.city || "");
+    setState(defaultAddress.state || "");
+    setPincode(defaultAddress.pincode || "");
+  }, [isAuthenticated, user]);
+
+  const applySavedAddress = (id: string) => {
+    if (!isAuthenticated || !Array.isArray(user?.addresses)) return;
+
+    const found = user.addresses.find((addr: any) => String(addr._id) === String(id));
+    if (!found) return;
+
+    setSelectedAddressId(String(found._id || ""));
+    setAddress(found.address || "");
+    setAddress2(found.address2 || "");
+    setCity(found.city || "");
+    setState(found.state || "");
+    setPincode(found.pincode || "");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,9 +119,40 @@ export default function Checkout() {
     setIsProcessing(true);
 
     try {
+      if (isAuthenticated && saveAddressToBook && selectedAddressId === "" && address.trim() && city.trim() && state.trim() && pincode.trim()) {
+        const addresses = Array.isArray(user?.addresses) ? [...user.addresses] : [];
+        const matchesExisting = addresses.some((addr: any) => (
+          String(addr.address || "").trim().toLowerCase() === address.trim().toLowerCase() &&
+          String(addr.city || "").trim().toLowerCase() === city.trim().toLowerCase() &&
+          String(addr.state || "").trim().toLowerCase() === state.trim().toLowerCase() &&
+          String(addr.pincode || "").trim().toLowerCase() === pincode.trim().toLowerCase()
+        ));
+
+        if (!matchesExisting) {
+          const nextAddress = {
+            label: "Checkout",
+            address,
+            address2,
+            city,
+            state,
+            pincode,
+            country: "India",
+            isDefault: addresses.length === 0,
+          };
+          addresses.push(nextAddress);
+          const nextUser = await authApi.updateMe({ addresses });
+          updateUser(nextUser);
+        }
+      }
+
       await ordersApi.create({
         shippingAddress: {
+          firstName,
+          lastName,
+          email,
+          phone,
           address: address2 ? `${address}, ${address2}` : address,
+          address2,
           city,
           state,
           pincode,
@@ -161,6 +239,95 @@ export default function Checkout() {
                     Shipping Address
                   </h2>
                   <div className="grid gap-4">
+                    {isAuthenticated && Array.isArray(user?.addresses) && user.addresses.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="savedAddress">Choose saved address</Label>
+                        <select
+                          id="savedAddress"
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          value={selectedAddressId}
+                          onChange={(e) => {
+                            const nextId = e.target.value;
+                            setSelectedAddressId(nextId);
+                            if (!nextId) {
+                              setAddress("");
+                              setAddress2("");
+                              setCity("");
+                              setState("");
+                              setPincode("");
+                              return;
+                            }
+                            applySavedAddress(nextId);
+                          }}
+                        >
+                          <option value="">Enter new address</option>
+                          {user.addresses.map((addr: any) => (
+                            <option key={String(addr._id || `${addr.address}-${addr.city}`)} value={String(addr._id || "")}> 
+                              {addr.label || "Shipping"} {addr.isDefault ? "(Default)" : ""} - {addr.address}, {addr.city}, {addr.state}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    {isAuthenticated && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="save-address-check"
+                          checked={saveAddressToBook}
+                          onChange={(e) => setSaveAddressToBook(e.target.checked)}
+                          className="h-4 w-4"
+                        />
+                        <Label htmlFor="save-address-check" className="text-sm text-muted-foreground">
+                          Save this new address in the address book
+                        </Label>
+                      </div>
+                    )}
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="firstName">First Name *</Label>
+                        <Input
+                          id="firstName"
+                          required
+                          placeholder="First Name"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lastName">Last Name *</Label>
+                        <Input
+                          id="lastName"
+                          required
+                          placeholder="Last Name"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          required
+                          placeholder="you@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone *</Label>
+                        <Input
+                          id="phone"
+                          required
+                          placeholder="+91 9876543210"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="address">Address *</Label>
                       <Input
@@ -168,7 +335,10 @@ export default function Checkout() {
                         required
                         placeholder="123 Main St"
                         value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        onChange={(e) => {
+                          setSelectedAddressId("");
+                          setAddress(e.target.value);
+                        }}
                       />
                     </div>
                     <div className="space-y-2">

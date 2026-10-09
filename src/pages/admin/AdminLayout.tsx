@@ -25,6 +25,7 @@ import {
   Package,
   Tags,
   ShoppingCart,
+  Megaphone,
   Users,
   ArrowLeft,
   LogOut,
@@ -38,6 +39,7 @@ const adminNav = [
   { name: "Products", href: "/admin/products", icon: Package },
   { name: "Categories", href: "/admin/categories", icon: Tags },
   { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+  { name: "Offers", href: "/admin/offers", icon: Megaphone },
   { name: "Users", href: "/admin/users", icon: Users },
 ];
 

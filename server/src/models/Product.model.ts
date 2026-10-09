@@ -38,6 +38,15 @@ export interface IProduct extends Document {
   updatedAt: Date;
 }
 
+export function deriveVariantDisplayLabel(variant: {
+  unitType?: string;
+  value: number;
+  unit: string;
+  displayLabel?: string;
+}): string {
+  return variant.displayLabel?.trim() || `${variant.value} ${variant.unit}`;
+}
+
 const variantSchema = new Schema<IProductVariant>(
   {
     unitType: {
@@ -148,10 +157,10 @@ const productSchema = new Schema<IProduct>(
   { timestamps: true }
 );
 
-// Pre-save hook: derive displayLabel for each variant
+// Pre-save hook: derive displayLabel for each variant from the real variant fields
 productSchema.pre("save", function (next) {
   for (const variant of this.variants) {
-    variant.displayLabel = `${variant.value} ${variant.unit}`;
+    variant.displayLabel = deriveVariantDisplayLabel(variant);
     if (!variant.sku) {
       variant.sku = `${this.slug}-${variant.unitType}-${variant.value}${variant.unit}`;
     }

@@ -125,6 +125,25 @@ npm run dev
 
 Backend runs at `http://localhost:5000`.
 
+## Deployment
+
+### Frontend on Vercel
+
+Import this repository into Vercel and set the project root to the repository root (the folder containing this `package.json`). Use these build settings:
+
+- Framework preset: Vite
+- Build command: `npm run build`
+- Output directory: `dist`
+- Install command: `npm install`
+
+Set `VITE_API_URL` in the Vercel project environment variables to the public API base URL, including `/api` (for example, `https://your-api.example.com/api`). Redeploy after changing environment variables. `vercel.json` rewrites frontend routes to `index.html` so React Router paths work on direct visits and refreshes.
+
+### Backend API
+
+The Express API is a separate Node service; it is not deployed by the frontend Vercel project. Deploy the `server` directory to a Node host such as Render, configure its build command as `npm install && npm run build` and its start command as `npm start`, then add the backend environment variables listed above in that host's dashboard. Set `CORS_ORIGIN` to the exact Vercel frontend origin (for example, `https://your-project.vercel.app`), and set `NODE_ENV=production`.
+
+Use the production MongoDB Atlas URI, JWT secrets, Backblaze B2 credentials, and Resend settings as backend environment variables. Never put backend secrets in Vercel's `VITE_*` variables or commit them to the repository. Since login refresh uses an HTTP-only cookie, test registration, login, page refresh, and logout after deployment. For reliable cross-site refresh cookies, use frontend and API domains under the same parent domain and configure the cookie `SameSite` and `Secure` attributes appropriately.
+
 ---
 
 ## Environment Variables
@@ -154,6 +173,10 @@ Backend runs at `http://localhost:5000`.
 | `B2_ENDPOINT` | B2 S3-compatible endpoint URL | **Yes** |
 | `B2_REGION` | B2 region | No (default: `us-east-005`) |
 | `B2_SIGNED_URL_EXPIRY_SECONDS` | Presigned URL lifetime | No (default: `3600`) |
+| `RESEND_API_KEY` | Resend API key used by the backend to send email | Required for email delivery |
+| `FROM_EMAIL` | Verified sender address on the Resend domain | Required for email delivery |
+| `ADMIN_EMAIL` | Destination for contact and new-order notifications | No (uses configured fallback) |
+| `APP_NAME` | Application name used in email content | No (default: `BeejVeda`) |
 
 ---
 
@@ -173,6 +196,8 @@ Backend runs at `http://localhost:5000`.
 | GET | `/api/categories` | List active categories with product counts |
 | GET | `/api/categories/:slug` | Get category by slug |
 | GET | `/api/reviews/product/:productId` | List reviews for a product |
+| POST | `/api/contact` | Send a contact form message to the admin email |
+| POST | `/api/newsletter/subscribe` | Subscribe an email address to offers |
 
 ### Protected Endpoints (require `Authorization: Bearer <token>`)
 
@@ -208,6 +233,7 @@ Backend runs at `http://localhost:5000`.
 | GET | `/api/admin/orders` | List all orders (filterable) |
 | GET | `/api/admin/orders/:id` | Get order detail |
 | PATCH | `/api/admin/orders/:id/status` | Update order status |
+| POST | `/api/admin/offers/send` | Send an offer campaign to registered users and optionally active subscribers |
 | GET | `/api/admin/users` | List users |
 | PATCH | `/api/admin/users/:id/role` | Update user role |
 | POST | `/api/upload/product/:id` | Upload product image (multipart) |
@@ -238,13 +264,6 @@ Backend runs at `http://localhost:5000`.
 | `npm run seed` | Seed database with categories & products |
 
 ---
-
-## Deployment Notes
-
-- **Frontend**: Deploy the built `dist/` folder to any static host (Vercel, Netlify, Cloudflare Pages). Set `VITE_API_URL` to your production backend URL.
-- **Backend**: Deploy to any Node.js host (Railway, Render, Fly.io, a VPS). Set `CORS_ORIGIN` to your production frontend URL.
-- **Database**: MongoDB Atlas M0 (free tier) is sufficient for development and small production workloads.
-- **Storage**: Backblaze B2 is cost-effective for image storage. Application keys should be scoped to read+write on your bucket only.
 
 ---
 

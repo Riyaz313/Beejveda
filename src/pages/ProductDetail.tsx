@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import { useProduct, useProducts } from "@/hooks/useProducts";
-import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { useProductCart } from "@/hooks/useProductCart";
 import {
   Star,
   Heart,
@@ -21,14 +21,15 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function ProductDetail() {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const { mappedProduct: product, isLoading, isError } = useProduct(slug);
-  const [quantity, setQuantity] = useState(1);
+  const { quantity: cartQuantity, isLoading: cartLoading, isUpdating: cartUpdating, setQuantity: setCartQuantity } = useProductCart(product);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<
     "benefits" | "ingredients" | "howToUse"
   >("benefits");
 
-  const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
   const inWishlist = product ? isInWishlist(product.id) : false;
 
@@ -77,6 +78,12 @@ export default function ProductDetail() {
         ((product.originalPrice - product.price) / product.originalPrice) * 100
       )
     : 0;
+  const productImages = product.images?.length
+    ? product.images
+    : product.image
+      ? [{ key: product.image, alt: product.name, isPrimary: true, url: product.image }]
+      : [];
+  const activeImage = productImages[activeImageIndex] || productImages[0];
 
   return (
     <Layout>
@@ -116,10 +123,10 @@ export default function ProductDetail() {
             {/* Image Gallery */}
             <div className="space-y-4">
               <div className="aspect-square rounded-2xl overflow-hidden bg-secondary/30">
-                {product.image ? (
+                {activeImage ? (
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={activeImage.url}
+                    alt={activeImage.alt || product.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -128,6 +135,22 @@ export default function ProductDetail() {
                   </div>
                 )}
               </div>
+              {productImages.length > 1 && (
+                <div className="grid grid-cols-5 gap-3" role="group" aria-label={`${product.name} images`}>
+                  {productImages.map((image, index) => (
+                    <button
+                      key={image.key}
+                      type="button"
+                      aria-label={`Show image ${index + 1} of ${product.name}`}
+                      aria-pressed={index === activeImageIndex}
+                      onClick={() => setActiveImageIndex(index)}
+                      className={`aspect-square overflow-hidden rounded-lg border-2 transition-colors ${index === activeImageIndex ? "border-primary" : "border-transparent hover:border-border"}`}
+                    >
+                      <img src={image.url} alt={image.alt || `${product.name} view ${index + 1}`} className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Product Info */}
@@ -213,34 +236,24 @@ export default function ProductDetail() {
                 </span>
               </div>
 
-              {/* Quantity & Add to Cart */}
+              {/* Cart quantity */}
               <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <div className="flex items-center border border-input rounded-lg">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-3 hover:bg-secondary transition-colors"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="w-12 text-center font-medium">
-                    {quantity}
-                  </span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="p-3 hover:bg-secondary transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
-                <Button
-                  size="lg"
-                  className="flex-1"
-                  disabled={!product.inStock}
-                  onClick={() => addToCart(product, quantity)}
-                >
-                  <ShoppingCart className="w-5 h-5 mr-2" />
-                  {product.inStock ? "Add to Cart" : "Out of Stock"}
-                </Button>
+                {cartQuantity > 0 ? (
+                  <div className="flex h-12 w-fit items-center rounded-lg border border-input" aria-label={`${cartQuantity} in cart`}>
+                    <button type="button" aria-label={`Decrease ${product.name} quantity`} disabled={cartUpdating || cartLoading} onClick={() => void setCartQuantity(cartQuantity - 1)} className="p-3 transition-colors hover:bg-secondary disabled:opacity-50">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-12 text-center font-medium" aria-live="polite">{cartQuantity}</span>
+                    <button type="button" aria-label={`Increase ${product.name} quantity`} disabled={cartUpdating || cartLoading || !product.inStock} onClick={() => void setCartQuantity(cartQuantity + 1)} className="p-3 transition-colors hover:bg-secondary disabled:opacity-50">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button size="lg" className="flex-1" disabled={!product.inStock || cartLoading || cartUpdating} onClick={() => void setCartQuantity(1)}>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    {!product.inStock ? "Out of Stock" : cartLoading ? "Loading cart..." : "Add to Cart"}
+                  </Button>
+                )}
                 <Button
                   size="lg"
                   variant="outline"
@@ -258,15 +271,17 @@ export default function ProductDetail() {
 
               {/* Buy Now */}
               {product.inStock && (
-                <Link to="/cart">
-                  <Button
-                    size="lg"
-                    className="w-full mb-8 bg-gold hover:bg-gold/90 text-primary-foreground"
-                    onClick={() => addToCart(product, quantity)}
-                  >
-                    Buy Now
-                  </Button>
-                </Link>
+                <Button
+                  size="lg"
+                  className="w-full mb-8 bg-gold hover:bg-gold/90 text-primary-foreground"
+                  disabled={cartLoading || cartUpdating}
+                  onClick={async () => {
+                    if (cartQuantity === 0 && !(await setCartQuantity(1))) return;
+                    navigate("/checkout");
+                  }}
+                >
+                  Buy Now
+                </Button>
               )}
 
               {/* Trust Badges */}

@@ -1,9 +1,31 @@
 import { Response } from "express";
-import Cart from "../models/Cart.model.js";
+import mongoose from "mongoose";
+import Cart, { type ICartItem } from "../models/Cart.model.js";
 import Product from "../models/Product.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
+import { getSignedImageUrl } from "../utils/b2Storage.js";
+
+function consolidateDuplicateItems(items: ICartItem[]): ICartItem[] | null {
+  const itemsByIdentity = new Map<string, ICartItem>();
+  for (const item of items) {
+    const key = `${item.product.toString()}:${item.variantId.toString()}`;
+    const existing = itemsByIdentity.get(key);
+    if (existing) existing.quantity += item.quantity;
+    else {
+      itemsByIdentity.set(key, {
+        product: item.product,
+        variantId: item.variantId,
+        quantity: item.quantity,
+      });
+    }
+  }
+
+  return itemsByIdentity.size === items.length
+    ? null
+    : Array.from(itemsByIdentity.values());
+}
 
 // GET /api/cart
 export const getCart = asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -11,6 +33,12 @@ export const getCart = asyncHandler(async (req: AuthRequest, res: Response) => {
 
   if (!cart) {
     cart = await Cart.create({ user: req.user!._id, items: [] });
+  }
+
+  const consolidatedItems = consolidateDuplicateItems(cart.items);
+  if (consolidatedItems) {
+    cart.items = consolidatedItems;
+    await cart.save();
   }
 
   // Populate each item with live product/variant data
@@ -22,13 +50,22 @@ export const getCart = asyncHandler(async (req: AuthRequest, res: Response) => {
       const variant = (product.variants as any).id(item.variantId);
       if (!variant) return null;
 
+      const images = await Promise.all(
+        product.images.map(async (image) => ({
+          key: image.key,
+          alt: image.alt,
+          isPrimary: image.isPrimary,
+          url: await getSignedImageUrl(image.key),
+        }))
+      );
+
       return {
         _id: (item as any)._id,
         product: {
           _id: product._id,
           name: product.name,
           slug: product.slug,
-          images: product.images,
+          images,
           category: product.category,
         },
         variant: {
@@ -69,6 +106,16 @@ export const addToCart = asyncHandler(
   async (req: AuthRequest, res: Response) => {
     const { productId, variantId, quantity = 1 } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      throw ApiError.badRequest("Invalid product ID");
+    }
+    if (!mongoose.Types.ObjectId.isValid(variantId)) {
+      throw ApiError.badRequest("Invalid variant ID");
+    }
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      throw ApiError.badRequest("Quantity must be a positive integer");
+    }
+
     const product = await Product.findById(productId);
     if (!product) throw ApiError.notFound("Product not found");
 
@@ -84,25 +131,28 @@ export const addToCart = asyncHandler(
       cart = await Cart.create({ user: req.user!._id, items: [] });
     }
 
-    // Check if same product+variant already in cart
-    const existingIndex = cart.items.findIndex(
-      (i) =>
-        i.product.toString() === productId &&
-        i.variantId.toString() === variantId
+    const consolidatedItems = consolidateDuplicateItems(cart.items);
+    if (consolidatedItems) cart.items = consolidatedItems;
+
+    // Compare canonical ObjectIds so request string formatting cannot split identity.
+    const existingItem = cart.items.find(
+      (item) =>
+        item.product.equals(product._id) &&
+        item.variantId.equals(variant._id)
     );
 
-    if (existingIndex > -1) {
-      const newQty = cart.items[existingIndex].quantity + quantity;
+    if (existingItem) {
+      const newQty = existingItem.quantity + quantity;
       if (variant.stock < newQty) {
         throw ApiError.badRequest(
           `Insufficient stock — only ${variant.stock} available`
         );
       }
-      cart.items[existingIndex].quantity = newQty;
+      existingItem.quantity = newQty;
     } else {
       cart.items.push({
-        product: productId,
-        variantId,
+        product: product._id,
+        variantId: variant._id,
         quantity,
       });
     }

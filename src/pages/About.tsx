@@ -143,7 +143,7 @@ export default function About() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
               { value: "5000+", label: "Happy Customers" },
-              { value: "50+", label: "Organic Products" },
+              { value: "10+", label: "Organic Products" },
               { value: "100%", label: "Natural Ingredients" },
               { value: "15+", label: "Partner Farms" }
             ].map((stat) => (

@@ -5,7 +5,7 @@ import { ShoppingBag, ArrowRight, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCartAPI } from "@/hooks/useCartAPI";
 import { useAuth } from "@/contexts/AuthContext";
-import { mapApiProductToLocal } from "@/lib/api";
+import { useProducts } from "@/hooks/useProducts";
 import { toast } from "sonner";
 
 export default function Cart() {
@@ -25,6 +25,8 @@ export default function Cart() {
     updateItem: apiUpdate,
     clearCart: apiClear,
   } = useCartAPI();
+  const { mappedProducts: catalogProducts } = useProducts({ limit: 100 });
+  const apiImageBySlug = new Map(catalogProducts.map((product) => [product.slug, product.image]));
 
   // If logged in, use backend cart
   const isUsingApi = isAuthenticated;
@@ -76,6 +78,7 @@ export default function Cart() {
         image:
           item.product.images?.find((img) => img.isPrimary)?.url ||
           item.product.images?.[0]?.url ||
+          apiImageBySlug.get(item.product.slug) ||
           "",
         variantLabel: item.variant.displayLabel,
         price: item.variant.price,
@@ -86,7 +89,7 @@ export default function Cart() {
         id: item.product.id,
         name: item.product.name,
         slug: item.product.slug,
-        image: item.product.image,
+        image: apiImageBySlug.get(item.product.slug) || "",
         variantLabel: item.product.weight,
         price: item.product.price,
         quantity: item.quantity,

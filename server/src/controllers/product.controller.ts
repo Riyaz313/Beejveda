@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import Product from "../models/Product.model.js";
 import Category from "../models/Category.model.js";
 import { ApiError } from "../utils/ApiError.js";
@@ -37,7 +38,30 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
   const filter: any = { isActive: true };
 
   if (category) {
-    filter.category = category;
+    if (mongoose.Types.ObjectId.isValid(category)) {
+      filter.category = new mongoose.Types.ObjectId(category);
+    } else {
+      const categoryDoc = await Category.findOne({
+        slug: category,
+        isActive: true,
+      }).select("_id");
+
+      if (!categoryDoc) {
+        res.json({
+          success: true,
+          data: {
+            products: [],
+            total: 0,
+            page: Number(page),
+            limit: Number(limit),
+            pages: 0,
+          },
+        });
+        return;
+      }
+
+      filter.category = categoryDoc._id;
+    }
   }
 
   if (search) {
@@ -62,7 +86,8 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
 
   // Sort
   let sortOption: any = { createdAt: -1 };
-  if (sort === "price_asc") sortOption = { "variants.price": 1 };
+  if (sort === "newest") sortOption = { createdAt: -1 };
+  else if (sort === "price_asc") sortOption = { "variants.price": 1 };
   else if (sort === "price_desc") sortOption = { "variants.price": -1 };
   else if (sort === "rating") sortOption = { ratingsAverage: -1 };
   else if (sort === "name") sortOption = { name: 1 };

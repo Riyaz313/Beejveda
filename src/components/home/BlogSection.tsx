@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
-import FreshMilkyMushrooms from "@/assets/products/FreshMilkyMushrooms.png";
 
 
 const blogPosts = [
@@ -20,7 +19,7 @@ const blogPosts = [
     title: "Medicinal Mushrooms: Ancient Wisdom Meets Modern Science",
     excerpt: "From immunity to brain health, explore how medicinal mushrooms are revolutionizing wellness practices worldwide.",
     // image: "https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400&h=250&fit=crop",
-    image: FreshMilkyMushrooms,
+    image: "https://images.unsplash.com/photo-1504545102780-26774c1bb073?w=400&h=250&fit=crop",
     category: "Wellness",
     date: "Dec 25, 2024",
     readTime: "7 min read",

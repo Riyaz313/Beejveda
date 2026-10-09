@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import Order from "../../models/Order.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
+import { sendOrderStatusEmail } from "../../utils/email.js";
 
 // GET /api/admin/orders
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
@@ -56,9 +57,10 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
   const { status } = req.body;
 
-  const order = await Order.findById(req.params.id);
+  const order = await Order.findById(req.params.id).populate("user", "name email");
   if (!order) throw ApiError.notFound("Order not found");
 
+  const previousStatus = order.status;
   order.status = status;
 
   // Auto-update payment status for delivered orders
@@ -67,6 +69,10 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
   }
 
   await order.save();
+
+  if (previousStatus !== status) {
+    await sendOrderStatusEmail(order as any, status);
+  }
 
   res.json({ success: true, data: order });
 });

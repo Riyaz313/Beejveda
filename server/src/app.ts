@@ -10,6 +10,8 @@ import { adminOnly } from "./middleware/admin.middleware.js";
 
 // Routes
 import authRoutes from "./routes/auth.routes.js";
+import contactRoutes from "./routes/contact.routes.js";
+import newsletterRoutes from "./routes/newsletter.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
@@ -18,9 +20,15 @@ import uploadRoutes from "./routes/upload.routes.js";
 import adminProductRoutes from "./routes/admin/admin.product.routes.js";
 import adminCategoryRoutes from "./routes/admin/admin.category.routes.js";
 import adminOrderRoutes from "./routes/admin/admin.order.routes.js";
+import adminOfferRoutes from "./routes/admin/admin.offer.routes.js";
 import adminUserRoutes from "./routes/admin/admin.user.routes.js";
+import devRoutes from "./routes/dev.routes.js";
 
 const app = express();
+
+// Disable Express automatic ETag generation for JSON API routes so the
+// browser does not collapse the cart payload into a 304 with no body.
+app.disable("etag");
 
 // Global middleware
 app.use(helmet());
@@ -42,8 +50,15 @@ app.get("/api/health", (_req, res) => {
 
 // Public routes
 app.use("/api/auth", authRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/reviews", reviewRoutes);
+
+// Dev-only routes
+if (env.NODE_ENV === "development") {
+  app.use("/api/dev", devRoutes);
+}
 
 // Protected routes (require auth)
 app.use("/api/cart", protect, cartRoutes);
@@ -54,6 +69,7 @@ app.use("/api/upload", protect, adminOnly, uploadRoutes);
 app.use("/api/admin/products", protect, adminOnly, adminProductRoutes);
 app.use("/api/admin/categories", protect, adminOnly, adminCategoryRoutes);
 app.use("/api/admin/orders", protect, adminOnly, adminOrderRoutes);
+app.use("/api/admin/offers", protect, adminOnly, adminOfferRoutes);
 app.use("/api/admin/users", protect, adminOnly, adminUserRoutes);
 
 // 404 handler

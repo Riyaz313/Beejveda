@@ -22,6 +22,11 @@ const envSchema = z.object({
   B2_ENDPOINT: z.string().url("B2_ENDPOINT must be a valid URL"),
   B2_REGION: z.string().default("us-east-005"),
   B2_SIGNED_URL_EXPIRY_SECONDS: z.coerce.number().default(3600),
+
+  RESEND_API_KEY: z.string().optional(),
+  FROM_EMAIL: z.string().email("FROM_EMAIL must be a valid email").optional(),
+  ADMIN_EMAIL: z.string().email("ADMIN_EMAIL must be a valid email").optional(),
+  APP_NAME: z.string().default("BeejVeda"),
 });
 
 export type Env = z.infer<typeof envSchema>;

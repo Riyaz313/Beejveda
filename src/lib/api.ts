@@ -122,6 +122,19 @@ export const authApi = {
     return res.data;
   },
 
+  submitContact: async (payload: {
+    name: string;
+    email: string;
+    phone?: string;
+    subject: string;
+    message: string;
+  }) => {
+    return apiRequest<{ success: boolean; message: string }>("/contact", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   login: async (email: string, password: string) => {
     const res = await apiRequest<AuthResponse>("/auth/login", {
       method: "POST",
@@ -140,6 +153,14 @@ export const authApi = {
     const res = await apiRequest<{ success: boolean; data: AuthUser }>(
       "/auth/me"
     );
+    return res.data;
+  },
+
+  updateMe: async (payload: { name?: string; phone?: string; addresses?: any[] }) => {
+    const res = await apiRequest<{ success: boolean; data: AuthUser }>('/auth/me', {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
     return res.data;
   },
 
@@ -365,7 +386,12 @@ export interface Order {
     lineTotal: number;
   }[];
   shippingAddress: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
     address: string;
+    address2?: string;
     city: string;
     state: string;
     pincode: string;
@@ -561,6 +587,20 @@ export const adminApi = {
       body: JSON.stringify({ role }),
     });
   },
+
+  sendOfferCampaign: async (payload: {
+    subject: string;
+    message: string;
+    includeSubscribers?: boolean;
+  }) => {
+    return apiRequest<{ success: boolean; data: { recipients: number } }>(
+      "/admin/offers/send",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -640,6 +680,15 @@ export function mapApiProductToLocal(api: ApiProduct): Product {
 
   return {
     id: api._id,
+    variantId: defaultVariant?._id,
+    images: (api.images || [])
+      .filter((image) => Boolean(image.url))
+      .map((image) => ({
+        key: image.key,
+        alt: image.alt,
+        isPrimary: image.isPrimary,
+        url: image.url!,
+      })),
     name: api.name,
     slug: api.slug,
     category: categoryName,

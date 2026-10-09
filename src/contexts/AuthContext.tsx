@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (nextUser: Partial<AuthUser> & { _id?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,14 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await authApi.login(email, password);
-    setUser(data.user);
+    await authApi.login(email, password);
+    setUser(await authApi.getMe());
   }, []);
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
-      const data = await authApi.register(name, email, password);
-      setUser(data.user);
+      await authApi.register(name, email, password);
+      setUser(await authApi.getMe());
     },
     []
   );
@@ -57,6 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
+  }, []);
+
+  const updateUser = useCallback((nextUser: Partial<AuthUser> & { _id?: string }) => {
+    setUser((current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        ...nextUser,
+      } as AuthUser;
+    });
   }, []);
 
   return (
@@ -69,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        updateUser,
       }}
     >
       {children}

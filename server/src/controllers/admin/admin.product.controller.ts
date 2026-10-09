@@ -4,7 +4,18 @@ import Order from "../../models/Order.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { slugify } from "../../utils/slugify.js";
-import { deleteFromB2 } from "../../utils/b2Storage.js";
+import { deleteFromB2, getSignedImageUrl } from "../../utils/b2Storage.js";
+
+async function signProductImages(product: any) {
+  const data = product.toObject();
+  data.images = await Promise.all(
+    (data.images || []).map(async (image: any) => ({
+      ...image,
+      url: await getSignedImageUrl(image.key),
+    }))
+  );
+  return data;
+}
 
 // POST /api/admin/products
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
@@ -70,10 +81,12 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     Product.countDocuments(filter),
   ]);
 
+  const productsWithSignedImages = await Promise.all(products.map(signProductImages));
+
   res.json({
     success: true,
     data: {
-      products,
+      products: productsWithSignedImages,
       total,
       page: Number(page),
       limit: Number(limit),
@@ -89,7 +102,7 @@ export const getProductById = asyncHandler(async (req: Request, res: Response) =
     "name slug"
   );
   if (!product) throw ApiError.notFound("Product not found");
-  res.json({ success: true, data: product });
+  res.json({ success: true, data: await signProductImages(product) });
 });
 
 // PATCH /api/admin/products/:id

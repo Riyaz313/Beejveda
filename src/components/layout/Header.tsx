@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { useSearch } from "@/contexts/SearchContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCartAPI } from "@/hooks/useCartAPI";
 import { ProductCard } from "@/components/ProductCard";
 import Logo from "@/assets/Logo.png";
 
@@ -41,10 +42,12 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { itemCount } = useCart();
+  const { itemCount: localItemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { query, results, search, clearSearch } = useSearch();
   const { isAuthenticated, isAdmin } = useAuth();
+  const { cart: apiCart } = useCartAPI();
+  const itemCount = isAuthenticated ? (apiCart?.itemCount || 0) : localItemCount;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
